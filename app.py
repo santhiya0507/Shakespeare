@@ -1682,6 +1682,25 @@ def logout():
     flash('Thanks for practicing! Come back soon! 👋')
     return redirect(url_for('index'))
 
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle internal server errors with logging"""
+    import traceback
+    import sys
+    print("="*50, file=sys.stderr)
+    print("INTERNAL SERVER ERROR:", file=sys.stderr)
+    print(traceback.format_exc(), file=sys.stderr)
+    print("="*50, file=sys.stderr)
+    return "Internal Server Error - Check application logs", 500
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
+else:
+    # When running with Gunicorn on Render
+    try:
+        init_db()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Warning: Database initialization failed: {e}")
+        print("App will continue, but may fail if tables don't exist")
