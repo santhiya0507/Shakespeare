@@ -640,27 +640,43 @@ def submit_speaking_audio():
     
     # Convert audio to WAV format in memory for speech recognition
     try:
-        # Try to use audio directly if it's already WAV
+        # Always convert using pydub for reliability (handles all formats)
         audio_buffer = io.BytesIO(audio_bytes)
         audio_buffer.seek(0)
         
-        # Test if it's a valid audio file
+        # Detect and convert any audio format to WAV
+        # pydub can handle: WebM, MP3, OGG, FLAC, etc.
         try:
-            with sr.AudioFile(audio_buffer) as test_source:
-                pass  # Just testing if it's valid
-            # If successful, use it directly
-            wav_buffer = audio_buffer
-        except Exception:
-            # Not a valid WAV, convert it using pydub (in-memory conversion)
-            audio_buffer.seek(0)
             audio_segment = AudioSegment.from_file(audio_buffer)
-            # Convert to WAV format in memory (16kHz, mono for better recognition)
-            wav_io = io.BytesIO()
-            audio_segment.set_frame_rate(16000).set_channels(1).export(wav_io, format='wav')
-            wav_io.seek(0)
-            wav_buffer = wav_io
+        except Exception as e:
+            # If pydub fails, try with explicit format hint
+            audio_buffer.seek(0)
+            filename = (audio_file.filename or '').lower()
+            if 'webm' in filename or 'webm' in (audio_file.mimetype or ''):
+                audio_segment = AudioSegment.from_file(audio_buffer, format='webm')
+            elif 'ogg' in filename:
+                audio_segment = AudioSegment.from_file(audio_buffer, format='ogg')
+            elif 'mp3' in filename:
+                audio_segment = AudioSegment.from_file(audio_buffer, format='mp3')
+            else:
+                raise Exception(f"Unsupported audio format. Detected: {audio_file.mimetype}")
+        
+        # Convert to WAV format in memory (16kHz, mono for better recognition)
+        # This ensures compatibility with speech recognition
+        wav_io = io.BytesIO()
+        audio_segment.set_frame_rate(16000).set_channels(1).set_sample_width(2).export(
+            wav_io, 
+            format='wav',
+            codec='pcm_s16le'  # PCM 16-bit little-endian (standard WAV)
+        )
+        wav_io.seek(0)
+        wav_buffer = wav_io
+        
     except Exception as e:
-        return jsonify({'error': f'Audio format conversion failed: {str(e)}. Please use WAV or WebM format.'}), 400
+        error_msg = str(e)
+        if 'ffmpeg' in error_msg.lower() or 'avconv' in error_msg.lower():
+            return jsonify({'error': 'Audio conversion requires FFmpeg. Please contact administrator.'}), 500
+        return jsonify({'error': f'Audio format conversion failed: {error_msg}. Please try recording again.'}), 400
     
     # ===================================================================
     # LIVE SPEECH-TO-TEXT CONVERSION
