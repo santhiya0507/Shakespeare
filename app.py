@@ -630,53 +630,69 @@ def submit_speaking_audio():
     cursor_attempts.close()
     conn_attempts.close()
 
-    # Prefer: accept WAV directly. Fallback: convert using pydub if not WAV.
-    raw = audio_file.read()
-    wav_buf = None
-    try:
-        filename = (audio_file.filename or '').lower()
-        content_type = (audio_file.mimetype or '').lower()
-        src_buf = io.BytesIO(raw)
-        src_buf.seek(0)
-        # If client uploaded WAV (our new default), try using it directly
-        if filename.endswith('.wav') or 'wav' in content_type:
-            wav_buf = src_buf
-        else:
-            # Try to treat it as WAV directly (some browsers may already produce PCM WAV)
-            try:
-                with sr.AudioFile(src_buf) as _:
-                    pass
-                wav_buf = src_buf
-            except Exception:
-                wav_buf = None
-        # If still not WAV, convert using pydub (requires ffmpeg)
-        if wav_buf is None:
-            segment = AudioSegment.from_file(io.BytesIO(raw))
-            out = io.BytesIO()
-            segment.set_frame_rate(16000).set_channels(1).export(out, format='wav')
-            out.seek(0)
-            wav_buf = out
-    except Exception as e:
-        hint = (' Ensure FFmpeg is installed and available in PATH, or set env vars '
-                'FFMPEG_BIN (path to ffmpeg.exe) and FFPROBE_BIN (path to ffprobe.exe). '
-                'Download: https://www.gyan.dev/ffmpeg/builds/')
-        return jsonify({'error': f'Audio processing failed: {str(e)}.{hint}'}), 400
+    # ===================================================================
+    # LIVE AUDIO-TO-TEXT CONVERSION (NO FILE SAVING)
+    # Process audio directly in memory and convert to text immediately
+    # ===================================================================
     
-    # Transcribe using SpeechRecognition (Google API)
-    recognizer = sr.Recognizer()
+    # Read audio file into memory (not saved to disk)
+    audio_bytes = audio_file.read()
+    
+    # Convert audio to WAV format in memory for speech recognition
     try:
-        with sr.AudioFile(wav_buf) as source:
-            # Adjust for ambient noise
+        # Try to use audio directly if it's already WAV
+        audio_buffer = io.BytesIO(audio_bytes)
+        audio_buffer.seek(0)
+        
+        # Test if it's a valid audio file
+        try:
+            with sr.AudioFile(audio_buffer) as test_source:
+                pass  # Just testing if it's valid
+            # If successful, use it directly
+            wav_buffer = audio_buffer
+        except Exception:
+            # Not a valid WAV, convert it using pydub (in-memory conversion)
+            audio_buffer.seek(0)
+            audio_segment = AudioSegment.from_file(audio_buffer)
+            # Convert to WAV format in memory (16kHz, mono for better recognition)
+            wav_io = io.BytesIO()
+            audio_segment.set_frame_rate(16000).set_channels(1).export(wav_io, format='wav')
+            wav_io.seek(0)
+            wav_buffer = wav_io
+    except Exception as e:
+        return jsonify({'error': f'Audio format conversion failed: {str(e)}. Please use WAV or WebM format.'}), 400
+    
+    # ===================================================================
+    # LIVE SPEECH-TO-TEXT CONVERSION
+    # Convert audio to text using Google Speech Recognition API
+    # No audio files are saved - everything happens in memory
+    # ===================================================================
+    
+    recognizer = sr.Recognizer()
+    # Configure recognizer for better accuracy
+    recognizer.energy_threshold = 300
+    recognizer.dynamic_energy_threshold = True
+    
+    try:
+        with sr.AudioFile(wav_buffer) as source:
+            # Adjust for ambient noise (improves accuracy)
             recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            # Record the audio data
             audio_data = recognizer.record(source)
-        # Try Google Speech Recognition with timeout
+        
+        # Convert speech to text using Google's API (free tier)
+        # This happens in real-time - no files saved
         recorded_text = recognizer.recognize_google(audio_data, language='en-US')
+        
+        # Audio is now converted to text - audio data is discarded
+        # Only the text is used for analysis
+        
     except sr.UnknownValueError:
         return jsonify({'error': 'Could not understand audio. Please speak clearly and try again.'}), 400
     except sr.RequestError as e:
-        return jsonify({'error': f'Speech recognition service error: {str(e)}. Please try again later.'}), 503
+        return jsonify({'error': f'Speech recognition service unavailable: {str(e)}. Please try again later.'}), 503
     except Exception as e:
-        return jsonify({'error': f'Speech-to-text failed: {str(e)}'}), 400
+        return jsonify({'error': f'Speech-to-text conversion failed: {str(e)}'}), 400
     
     # Now reuse the scoring logic from submit_speaking
     conn = get_db_connection()
