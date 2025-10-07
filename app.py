@@ -608,18 +608,22 @@ def submit_speaking_audio():
     
     # Enforce attempts: max 3 per user per bio per day
     conn_attempts = get_db_connection()
+    cursor_attempts = conn_attempts.cursor()
     today = date.today()
-    attempt_count = conn_attempts.execute('''
+    placeholder = '%s' if USE_POSTGRES else '?'
+    cursor_attempts.execute(f'''
         SELECT COUNT(*) AS c FROM speaking_attempts
-        WHERE user_id = ? AND bio_id = ? AND DATE(attempt_at) = DATE(?)
-    ''', (session['user_id'], bio_id, today)).fetchone()['c']
+        WHERE user_id = {placeholder} AND bio_id = {placeholder} AND DATE(attempt_at) = DATE({placeholder})
+    ''', (session['user_id'], bio_id, today))
+    attempt_count = cursor_attempts.fetchone()['c']
     if attempt_count >= 10:
         conn_attempts.close()
         return jsonify({'error': 'Attempt limit reached. You have already tried 3 times today.'}), 429
     # Record this attempt regardless of success
-    conn_attempts.execute('''INSERT INTO speaking_attempts (user_id, bio_id) VALUES (?, ?)''',
+    cursor_attempts.execute(f'''INSERT INTO speaking_attempts (user_id, bio_id) VALUES ({placeholder}, {placeholder})''',
                           (session['user_id'], bio_id))
     conn_attempts.commit()
+    cursor_attempts.close()
     conn_attempts.close()
 
     # Prefer: accept WAV directly. Fallback: convert using pydub if not WAV.
@@ -658,24 +662,36 @@ def submit_speaking_audio():
     recognizer = sr.Recognizer()
     try:
         with sr.AudioFile(wav_buf) as source:
+            # Adjust for ambient noise
+            recognizer.adjust_for_ambient_noise(source, duration=0.5)
             audio_data = recognizer.record(source)
-        recorded_text = recognizer.recognize_google(audio_data)
+        # Try Google Speech Recognition with timeout
+        recorded_text = recognizer.recognize_google(audio_data, language='en-US')
+    except sr.UnknownValueError:
+        return jsonify({'error': 'Could not understand audio. Please speak clearly and try again.'}), 400
+    except sr.RequestError as e:
+        return jsonify({'error': f'Speech recognition service error: {str(e)}. Please try again later.'}), 503
     except Exception as e:
         return jsonify({'error': f'Speech-to-text failed: {str(e)}'}), 400
     
     # Now reuse the scoring logic from submit_speaking
     conn = get_db_connection()
     # Check duplicate completion
-    existing = conn.execute('''
+    cursor = conn.cursor()
+    cursor.execute(f'''
         SELECT * FROM user_completions 
-        WHERE user_id = ? AND module_type = "speaking" AND content_id = ?
-    ''', (session['user_id'], bio_id)).fetchone()
+        WHERE user_id = {placeholder} AND module_type = {placeholder} AND content_id = {placeholder}
+    ''', (session['user_id'], 'speaking', bio_id))
+    existing = cursor.fetchone()
     if existing:
+        cursor.close()
         conn.close()
         return jsonify({'error': 'Already completed'}), 409
     
-    biography = conn.execute('SELECT * FROM biographies WHERE id = ?', (bio_id,)).fetchone()
+    cursor.execute(f'SELECT * FROM biographies WHERE id = {placeholder}', (bio_id,))
+    biography = cursor.fetchone()
     if not biography:
+        cursor.close()
         conn.close()
         return jsonify({'error': 'Biography not found'}), 404
     
@@ -700,32 +716,36 @@ def submit_speaking_audio():
         final_score = similarity
     
     # Save completion and points
-    conn.execute('''INSERT INTO user_completions 
+    cursor.execute(f'''INSERT INTO user_completions 
                    (user_id, module_type, content_id, score, points_earned)
-                   VALUES (?, ?, ?, ?, ?)''',
+                   VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})''',
                 (session['user_id'], 'speaking', bio_id, final_score, points_earned))
-    conn.execute('UPDATE users SET total_points = total_points + ? WHERE id = ?',
+    cursor.execute(f'UPDATE users SET total_points = total_points + {placeholder} WHERE id = {placeholder}',
                 (points_earned, session['user_id']))
     conn.commit()
+    cursor.close()
     conn.close()
     
     # Update streaks using fresh connection
     conn2 = get_db_connection()
+    cursor2 = conn2.cursor()
     today = date.today()
-    streak_record = conn2.execute('''
+    cursor2.execute(f'''
         SELECT * FROM user_streaks 
-        WHERE user_id = ? AND streak_date = ?
-    ''', (session['user_id'], today)).fetchone()
+        WHERE user_id = {placeholder} AND streak_date = {placeholder}
+    ''', (session['user_id'], today))
+    streak_record = cursor2.fetchone()
     if not streak_record:
-        conn2.execute('''INSERT INTO user_streaks 
+        cursor2.execute(f'''INSERT INTO user_streaks 
                        (user_id, streak_date, modules_completed, points_earned)
-                       VALUES (?, ?, 1, ?)''',
+                       VALUES ({placeholder}, {placeholder}, 1, {placeholder})''',
                     (session['user_id'], today, points_earned))
-        conn2.execute('UPDATE users SET current_streak = current_streak + 1 WHERE id = ?',
+        cursor2.execute(f'UPDATE users SET current_streak = current_streak + 1 WHERE id = {placeholder}',
                      (session['user_id'],))
-    conn2.execute('''UPDATE users SET best_streak = MAX(best_streak, current_streak) 
-                   WHERE id = ?''', (session['user_id'],))
+    cursor2.execute(f'''UPDATE users SET best_streak = GREATEST(best_streak, current_streak) 
+                   WHERE id = {placeholder}''', (session['user_id'],))
     conn2.commit()
+    cursor2.close()
     conn2.close()
     
     return jsonify({
