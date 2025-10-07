@@ -31,6 +31,10 @@ except Exception:
 app = Flask(__name__)
 app.secret_key = os.environ.get('SESSION_SECRET', 'shakespeare-club-secret-key')
 
+# Configure file upload limits for audio files
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['UPLOAD_FOLDER'] = '/tmp'  # Use /tmp on Render (writable directory)
+
 # Database configuration: Use PostgreSQL on Render, SQLite locally
 DATABASE_URL = os.environ.get('DATABASE_URL')  # Render provides this
 USE_POSTGRES = DATABASE_URL and POSTGRES_AVAILABLE
