@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Shakespeare Club</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gamified.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient">
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="game-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="text-gradient mb-2">🎭 Welcome, {{ session.username }}!</h2>
+                            <p class="mb-0">Department: {{ session.department }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="points-display me-2">
+                                <i class="fas fa-coins me-1"></i>{{ user.total_points }} Points
+                            </div>
+                            <div class="streak-display">
+                                <i class="fas fa-fire me-1"></i>{{ user.current_streak }} Day Streak
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Tasks -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="game-card">
+                    <h5><i class="fas fa-tasks me-2"></i>Assigned Tasks</h5>
+                    {% if tasks and tasks|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>Department</th>
+                                        <th>Due</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for t in tasks %}
+                                    <tr>
+                                        <td><strong>{{ t.title }}</strong></td>
+                                        <td>{{ t.description or '-' }}</td>
+                                        <td>{{ t.department }}</td>
+                                        <td>{{ t.due_date or '-' }}</td>
+                                        <td>
+                                            {% if t.module_type and t.content_id %}
+                                                {% if t.module_type == 'speaking' %}
+                                                    <a href="{{ url_for('speaking_practice', bio_id=t.content_id) }}" class="btn btn-speaking btn-sm">Practice Now</a>
+                                                {% elif t.module_type == 'listening' %}
+                                                    <a href="{{ url_for('listening_practice', content_id=t.content_id) }}" class="btn btn-listening btn-sm">Practice Now</a>
+                                                {% elif t.module_type == 'observation' %}
+                                                    <a href="{{ url_for('observation_practice', content_id=t.content_id) }}" class="btn btn-observation btn-sm">Practice Now</a>
+                                                {% elif t.module_type == 'writing' %}
+                                                    <a href="{{ url_for('writing_module') }}" class="btn btn-writing btn-sm">Practice Now</a>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No tasks assigned yet. Check back later.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info game-alert alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter: invert(1);"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Featured Quote -->
+        {% if featured_quote %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="game-card">
+                    <h5>🌟 Today's Featured Quote</h5>
+                    <blockquote class="blockquote">
+                        <p>"{{ featured_quote.quote }}"</p>
+                        <footer class="blockquote-footer">{{ featured_quote.author or 'Anonymous' }}</footer>
+                    </blockquote>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-trophy me-1"></i>
+                        First posted by {{ featured_quote.username }} from {{ featured_quote.department }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Communication Modules -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="text-center text-white mb-4">🎮 Choose Your Challenge</h4>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="module-card speaking">
+                    <h5><i class="fas fa-microphone me-2"></i>Speaking Practice</h5>
+                    <p>Read famous biographies and improve your pronunciation skills!</p>
+                    <a href="{{ url_for('speaking_module') }}" class="btn btn-speaking w-100">
+                        <i class="fas fa-play me-2"></i>Start Speaking
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="module-card listening">
+                    <h5><i class="fas fa-headphones me-2"></i>Listening Practice</h5>
+                    <p>Listen to our robot friends and test your comprehension!</p>
+                    <a href="{{ url_for('listening_module') }}" class="btn btn-listening w-100">
+                        <i class="fas fa-play me-2"></i>Start Listening
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="module-card writing">
+                    <h5><i class="fas fa-pen-fancy me-2"></i>Writing Practice</h5>
+                    <p>Share daily quotes and showcase your writing skills!</p>
+                    <a href="{{ url_for('writing_module') }}" class="btn btn-writing w-100">
+                        <i class="fas fa-play me-2"></i>Start Writing
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="module-card observation">
+                    <h5><i class="fas fa-eye me-2"></i>Observation Practice</h5>
+                    <p>Watch motivational videos and test your understanding!</p>
+                    <a href="{{ url_for('observation_module') }}" class="btn btn-observation w-100">
+                        <i class="fas fa-play me-2"></i>Start Observing
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats and Progress -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="game-card">
+                    <h5><i class="fas fa-chart-line me-2"></i>Your Progress</h5>
+                    {% if activities %}
+                        {% for activity in activities %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>
+                                {% if activity.module_type == 'speaking' %}🎤
+                                {% elif activity.module_type == 'listening' %}🎧
+                                {% elif activity.module_type == 'writing' %}✍️
+                                {% elif activity.module_type == 'observation' %}👁️
+                                {% endif %}
+                                {{ activity.module_type.title() }}
+                            </span>
+                            <div>
+                                <span class="badge badge-item">{{ activity.points_earned }} pts</span>
+                                <small class="text-muted">{{ activity.completed_at[:10] }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No activities yet. Start practicing to see your progress!</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="game-card">
+                    <h5><i class="fas fa-trophy me-2"></i>Your Badges</h5>
+                    {% if badges %}
+                        {% for badge in badges %}
+                            <span class="badge-item">🏆 {{ badge }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Complete practices to earn badges!</p>
+                        <small>
+                            <strong>Available Badges:</strong><br>
+                            🥇 Century Scorer (100+ points)<br>
+                            🔥 Week Warrior (7-day streak)<br>
+                            📚 Practice Champion (10+ practices)<br>
+                            🎓 Communication Expert (50+ practices)
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="game-card text-center">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('profile') }}" class="btn btn-game-secondary w-100">
+                                <i class="fas fa-user-edit me-2"></i>Profile
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            {% if certificate_ready %}
+                                <a href="{{ url_for('certificate_view') }}" class="btn btn-success w-100">
+                                    <i class="fas fa-certificate me-2"></i>Certificate
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('certificate_view') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-certificate me-2"></i>Certificate
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('leaderboard') }}" class="btn btn-game-secondary w-100">
+                                <i class="fas fa-ranking-star me-2"></i>Leaderboard
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-game-primary w-100">
+                                <i class="fas fa-refresh me-2"></i>Refresh
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2 d-none">
+                            <a href="#" class="btn btn-outline-light w-100">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('logout') }}" class="btn btn-outline-light w-100">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating animations -->
+    <div class="floating-elements">
+        <div class="floating-element">🎭</div>
+        <div class="floating-element">🌟</div>
+        <div class="floating-element">📚</div>
+        <div class="floating-element">🎯</div>
+        <div class="floating-element">💎</div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/gamified.js') }}"></script>
+    
+    <script>
+        // Check for new badges and celebrate
+        {% if badges and badges|length > 0 %}
+            // Simulate badge celebration (in real app, check if badge is new)
+            setTimeout(() => {
+                {% for badge in badges %}
+                    unlockBadge('{{ badge }}');
+                {% endfor %}
+            }, 1000);
+        {% endif %}
+    </script>
+</body>
+</html>
