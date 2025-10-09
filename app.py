@@ -335,28 +335,51 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        register_number = request.form['register_number']
-        department = request.form['department']
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        register_number = request.form.get('register_number', '').strip()
+        department = request.form.get('department', '').strip()
         
         conn = get_db_connection()
         try:
-            conn.execute('''INSERT INTO users (username, register_number, department)
-                           VALUES (?, ?, ?)''',
-                        (username, register_number, department))
-            conn.commit()
+            # Check if trying to register as admin
+            if username.lower() == 'admin':
+                # Admin registration is NOT allowed - redirect to login
+                flash('Admin account already exists! Please use the login page with username "admin" and password "admin123".')
+                conn.close()
+                return redirect(url_for('login'))
             
-            # Get the new user
-            user = conn.execute('SELECT * FROM users WHERE register_number = ?', (register_number,)).fetchone()
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['department'] = user['department']
-            
-            flash('Welcome to Shakespeare Club! Your communication journey begins now! 🎭')
-            return redirect(url_for('dashboard'))
-        except sqlite3.IntegrityError:
-            flash('Username or register number already exists!')
-        finally:
+            # Regular student registration only
+            if register_number and department:
+                conn.execute('''INSERT INTO users (username, register_number, department)
+                               VALUES (?, ?, ?)''',
+                            (username, register_number, department))
+                conn.commit()
+                
+                # Get the new user
+                user = conn.execute('SELECT * FROM users WHERE register_number = ?', (register_number,)).fetchone()
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['department'] = user['department']
+                
+                flash('Welcome to Shakespeare Club! Your communication journey begins now! 🎭')
+                conn.close()
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Please fill in all required fields!')
+                conn.close()
+                
+        except sqlite3.IntegrityError as e:
+            error_msg = str(e).lower()
+            if 'register_number' in error_msg:
+                flash('❌ This register number is already taken! Please use your unique register number.')
+            elif 'username' in error_msg:
+                flash('❌ This username is already taken! Please choose a different username.')
+            else:
+                flash('❌ Registration failed! Username or register number already exists.')
+            conn.close()
+        except Exception as e:
+            flash(f'❌ Registration error: {str(e)}')
             conn.close()
     
     return render_template('register.html')
@@ -364,20 +387,43 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        register_number = request.form['register_number']
+        # Check if it's admin login (has username field) or student login (has register_number)
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        register_number = request.form.get('register_number', '').strip()
         
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE register_number = ?', (register_number,)).fetchone()
-        conn.close()
         
-        if user:
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['department'] = user['department']
-            flash(f'Welcome back, {user["username"]}! Ready for more communication practice? 🌟')
-            return redirect(url_for('dashboard'))
+        # Admin login: if username and password are provided
+        if username and password:
+            admin = conn.execute('SELECT * FROM admins WHERE username = ?', (username,)).fetchone()
+            if admin and check_password_hash(admin['password_hash'], password):
+                session['admin_id'] = admin['id']
+                session['admin_username'] = admin['username']
+                conn.close()
+                flash(f'Welcome Admin {admin["username"]}! 🎯')
+                return redirect(url_for('admin_dashboard'))
+            else:
+                conn.close()
+                flash('Invalid admin credentials!')
+                return render_template('login.html')
+        
+        # Student login: if register_number is provided
+        elif register_number:
+            user = conn.execute('SELECT * FROM users WHERE register_number = ?', (register_number,)).fetchone()
+            conn.close()
+            
+            if user:
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['department'] = user['department']
+                flash(f'Welcome back, {user["username"]}! Ready for more communication practice? 🌟')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Register number not found!')
         else:
-            flash('Register number not found!')
+            conn.close()
+            flash('Please enter either register number or admin credentials!')
     
     return render_template('login.html')
 
@@ -1226,22 +1272,8 @@ def submit_observation():
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        conn = get_db_connection()
-        admin = conn.execute('SELECT * FROM admins WHERE username = ?', (username,)).fetchone()
-        conn.close()
-        
-        if admin and check_password_hash(admin['password_hash'], password):
-            session['admin_id'] = admin['id']
-            session['admin_username'] = admin['username']
-            return redirect(url_for('admin_dashboard'))
-        else:
-            flash('Invalid credentials!')
-    
-    return render_template('admin_login.html')
+    # Redirect to unified login page
+    return redirect(url_for('login'))
 
 @app.route('/admin/dashboard')
 def admin_dashboard():

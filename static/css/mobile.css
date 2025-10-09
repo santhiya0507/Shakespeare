@@ -1,0 +1,404 @@
+/* ========================================
+   MOBILE-FRIENDLY STYLES FOR BARDSPEAK
+   Optimized for smartphones and tablets
+   ======================================== */
+
+/* Mobile Viewport Optimization */
+@media (max-width: 768px) {
+    
+    /* Base Typography */
+    body {
+        font-size: 16px !important;
+        -webkit-text-size-adjust: 100%;
+        -webkit-font-smoothing: antialiased;
+    }
+    
+    h1 { font-size: 1.75rem !important; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.25rem !important; }
+    h4 { font-size: 1.1rem !important; }
+    h5 { font-size: 1rem !important; }
+    
+    /* Container Spacing */
+    .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    
+    .row {
+        margin-left: -5px !important;
+        margin-right: -5px !important;
+    }
+    
+    [class*="col-"] {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+    
+    /* Cards */
+    .game-card, .module-card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+        border-radius: 12px !important;
+    }
+    
+    /* Buttons - Touch Friendly */
+    .btn {
+        min-height: 48px !important;
+        padding: 12px 20px !important;
+        font-size: 16px !important;
+        border-radius: 8px !important;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .btn-lg {
+        min-height: 56px !important;
+        padding: 16px 24px !important;
+        font-size: 18px !important;
+    }
+    
+    .btn-sm {
+        min-height: 40px !important;
+        padding: 8px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Button Groups */
+    .btn-group {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    .btn-group .btn {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    /* Forms - Touch Friendly */
+    .form-control, .form-select {
+        min-height: 48px !important;
+        font-size: 16px !important;
+        padding: 12px 16px !important;
+        border-radius: 8px !important;
+    }
+    
+    textarea.form-control {
+        min-height: 120px !important;
+    }
+    
+    .form-label {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* Navigation */
+    .nav-pills .nav-link {
+        min-height: 48px !important;
+        padding: 12px 16px !important;
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* Tables */
+    .table {
+        font-size: 14px !important;
+    }
+    
+    .table td, .table th {
+        padding: 12px 8px !important;
+    }
+    
+    /* Hide on mobile */
+    .d-mobile-none {
+        display: none !important;
+    }
+    
+    /* Module Cards */
+    .module-card {
+        min-height: auto !important;
+    }
+    
+    .module-icon {
+        font-size: 2rem !important;
+    }
+    
+    /* Points and Badges */
+    .points-display, .streak-display {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+        margin: 5px 0 !important;
+        display: inline-block !important;
+    }
+    
+    .badge {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+    
+    /* Dashboard Stats */
+    .stat-card {
+        padding: 15px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    /* Alerts */
+    .alert {
+        font-size: 14px !important;
+        padding: 12px 16px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Images */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    /* Logo */
+    .logo-container img {
+        max-width: 120px !important;
+    }
+    
+    /* Text Alignment on Mobile */
+    .text-md-end {
+        text-align: center !important;
+        margin-top: 10px !important;
+    }
+    
+    /* Spacing Utilities */
+    .mb-4 { margin-bottom: 1rem !important; }
+    .mt-4 { margin-top: 1rem !important; }
+    .py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    
+    /* Biography Content */
+    .biography-content {
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+        padding: 15px !important;
+    }
+    
+    /* Audio/Video Players */
+    audio, video {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Leaderboard */
+    .leaderboard-item {
+        padding: 12px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* Progress Bars */
+    .progress {
+        height: 24px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Modal Dialogs */
+    .modal-dialog {
+        margin: 10px !important;
+    }
+    
+    .modal-content {
+        border-radius: 12px !important;
+    }
+    
+    /* Tabs */
+    .tab-content {
+        padding: 15px 0 !important;
+    }
+    
+    /* Feature Grid */
+    .features-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    
+    .feature-item {
+        padding: 15px !important;
+        font-size: 14px !important;
+    }
+    
+    .feature-icon {
+        font-size: 2rem !important;
+    }
+    
+    /* Speaking Practice */
+    #recordStatus {
+        font-size: 16px !important;
+        padding: 10px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Writing Module */
+    .writing-prompt {
+        padding: 15px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Listening Module */
+    .listening-card {
+        padding: 15px !important;
+    }
+    
+    /* Observation Module */
+    .video-container {
+        position: relative !important;
+        padding-bottom: 56.25% !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    .video-container iframe {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    /* Certificate */
+    .certificate-container {
+        padding: 15px !important;
+    }
+    
+    /* Admin Dashboard - Stack on Mobile */
+    .admin-stats {
+        margin-bottom: 15px !important;
+    }
+    
+    /* Dropdown Menus */
+    .dropdown-menu {
+        font-size: 16px !important;
+    }
+    
+    .dropdown-item {
+        padding: 12px 16px !important;
+    }
+    
+    /* List Groups */
+    .list-group-item {
+        padding: 12px 16px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Pagination */
+    .pagination .page-link {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        font-size: 16px !important;
+    }
+}
+
+/* Extra Small Devices (phones in portrait) */
+@media (max-width: 576px) {
+    
+    h1 { font-size: 1.5rem !important; }
+    h2 { font-size: 1.3rem !important; }
+    
+    .btn-group {
+        flex-direction: column !important;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .table {
+        font-size: 12px !important;
+    }
+    
+    .table td, .table th {
+        padding: 8px 4px !important;
+    }
+}
+
+/* Landscape Orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    
+    .container-fluid {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+    
+    .game-card {
+        margin-bottom: 10px !important;
+    }
+}
+
+/* Touch Improvements */
+@media (hover: none) and (pointer: coarse) {
+    
+    /* Larger tap targets */
+    a, button, input, select, textarea {
+        min-height: 44px !important;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .btn:hover {
+        transform: none !important;
+    }
+    
+    /* Prevent double-tap zoom */
+    * {
+        touch-action: manipulation;
+    }
+}
+
+/* Dark Mode Support for Mobile */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+    
+    body {
+        background: #1a1a2e !important;
+    }
+    
+    .game-card, .module-card {
+        background: #16213e !important;
+        color: #fff !important;
+    }
+    
+    .form-control, .form-select {
+        background: #0f3460 !important;
+        color: #fff !important;
+        border-color: #533483 !important;
+    }
+}
+
+/* Accessibility - High Contrast Mode */
+@media (prefers-contrast: high) {
+    
+    .btn {
+        border-width: 2px !important;
+    }
+    
+    .form-control, .form-select {
+        border-width: 2px !important;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print Styles */
+@media print {
+    
+    .btn, .nav, .navbar, .sidebar {
+        display: none !important;
+    }
+    
+    .game-card, .module-card {
+        page-break-inside: avoid !important;
+    }
+}

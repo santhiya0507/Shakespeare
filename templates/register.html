@@ -14,7 +14,16 @@
             <div class="col-md-6 col-lg-5 mx-auto">
                 <div class="game-card">
                     <div class="game-header text-center">
-                        <img src="{{ url_for('static', filename='images/shakespeare_logo.png') }}" alt="Shakespeare Club Logo" style="max-width: 150px; margin-bottom: 15px;">
+                        <div class="logo-container mb-3">
+                            <img src="{{ url_for('static', filename='images/shakespeare_logo.png') }}" 
+                                 alt="Shakespeare Club" 
+                                 style="max-width: 150px; margin-bottom: 15px;"
+                                 onerror="this.style.display='none'; document.getElementById('textLogoReg').style.display='block';">
+                            <div id="textLogoReg" style="display: none;">
+                                <h1 class="display-3 mb-0" style="color: #6366f1; font-weight: bold;">🎭</h1>
+                                <h3 style="color: #6366f1; font-weight: bold; margin-top: 10px;">Shakespeare Club</h3>
+                            </div>
+                        </div>
                         <h2>🎮 Join the Adventure!</h2>
                         <p class="mb-4">Start your communication mastery journey</p>
                     </div>
@@ -29,24 +38,26 @@
                         {% endif %}
                     {% endwith %}
                     
-                    <form method="POST" class="game-form">
+                    <form method="POST" class="game-form" id="registerForm">
                         <div class="mb-3">
                             <label for="username" class="form-label">
                                 <i class="fas fa-user me-2"></i>Username
                             </label>
                             <input type="text" class="form-control game-input" id="username" name="username" 
-                                   placeholder="Choose your player name" required>
+                                   placeholder="Choose your player name (not 'admin')" required onkeyup="checkAdminUsername()">
+                            <small class="text-muted">Note: Username "admin" is reserved for administrators</small>
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="mb-3" id="registerNumberField">
                             <label for="register_number" class="form-label">
                                 <i class="fas fa-id-card me-2"></i>Register Number
                             </label>
                             <input type="text" class="form-control game-input" id="register_number" name="register_number" 
                                    placeholder="Your unique register number" required>
+                            <small class="text-muted">⚠️ Each student must have a unique register number</small>
                         </div>
                         
-                        <div class="mb-4">
+                        <div class="mb-4" id="departmentField">
                             <label for="department" class="form-label">
                                 <i class="fas fa-graduation-cap me-2"></i>Department
                             </label>
@@ -88,5 +99,48 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/gamified.js') }}"></script>
+    <script>
+        function checkAdminUsername() {
+            const username = document.getElementById('username').value.toLowerCase();
+            const registerNumberField = document.getElementById('registerNumberField');
+            const departmentField = document.getElementById('departmentField');
+            const registerNumberInput = document.getElementById('register_number');
+            const departmentInput = document.getElementById('department');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            if (username === 'admin') {
+                // Show warning message and disable registration
+                registerNumberField.style.display = 'none';
+                departmentField.style.display = 'none';
+                registerNumberInput.required = false;
+                departmentInput.required = false;
+                
+                // Show admin message
+                if (!document.getElementById('adminWarning')) {
+                    const warning = document.createElement('div');
+                    warning.id = 'adminWarning';
+                    warning.className = 'alert alert-warning';
+                    warning.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>Admin Login:</strong> Please use the <a href="/login" class="alert-link">Login Page</a> with username "admin" and password "admin123".';
+                    document.getElementById('registerForm').insertBefore(warning, submitBtn.parentElement);
+                }
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            } else {
+                // Show normal student registration fields
+                registerNumberField.style.display = 'block';
+                departmentField.style.display = 'block';
+                registerNumberInput.required = true;
+                departmentInput.required = true;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                
+                // Remove admin warning if exists
+                const warning = document.getElementById('adminWarning');
+                if (warning) {
+                    warning.remove();
+                }
+            }
+        }
+    </script>
 </body>
 </html>
