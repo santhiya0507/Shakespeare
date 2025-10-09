@@ -15,7 +15,10 @@
             <div class="col-12">
                 <div class="game-card">
                     <div class="row align-items-center">
-                        <div class="col-md-8">
+                        <div class="col-md-2 text-center">
+                            <img src="{{ url_for('static', filename='images/shakespeare_logo.png') }}" alt="Shakespeare Club Logo" style="max-width: 100px;">
+                        </div>
+                        <div class="col-md-6">
                             <h2 class="text-gradient mb-2">🎭 Welcome, {{ session.username }}!</h2>
                             <p class="mb-0">Department: {{ session.department }}</p>
                         </div>

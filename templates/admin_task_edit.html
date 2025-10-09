@@ -89,10 +89,12 @@
                             <label class="form-label">Department</label>
                             <select class="form-select" name="department">
                                 <option value="ALL" {{ task.department == 'ALL' and 'selected' or '' }}>ALL (visible to everyone)</option>
-                                <option value="CSE" {{ task.department == 'CSE' and 'selected' or '' }}>CSE</option>
-                                <option value="ECE" {{ task.department == 'ECE' and 'selected' or '' }}>ECE</option>
-                                <option value="MECH" {{ task.department == 'MECH' and 'selected' or '' }}>MECH</option>
-                                <option value="CIVIL" {{ task.department == 'CIVIL' and 'selected' or '' }}>CIVIL</option>
+                                <option value="Artificial Intelligence and Data Science" {{ task.department == 'Artificial Intelligence and Data Science' and 'selected' or '' }}>Artificial Intelligence and Data Science</option>
+                                <option value="Computer Science Engineering" {{ task.department == 'Computer Science Engineering' and 'selected' or '' }}>Computer Science Engineering</option>
+                                <option value="Mechanical Engineering" {{ task.department == 'Mechanical Engineering' and 'selected' or '' }}>Mechanical Engineering</option>
+                                <option value="Electronics and Communication Engineering" {{ task.department == 'Electronics and Communication Engineering' and 'selected' or '' }}>Electronics and Communication Engineering</option>
+                                <option value="Information Technology" {{ task.department == 'Information Technology' and 'selected' or '' }}>Information Technology</option>
+                                <option value="Artificial Intelligence and Machine Learning" {{ task.department == 'Artificial Intelligence and Machine Learning' and 'selected' or '' }}>Artificial Intelligence and Machine Learning</option>
                             </select>
                         </div>
                         <div class="mb-3">

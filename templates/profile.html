@@ -52,7 +52,14 @@
             </div>
             <div class="mb-3">
               <label for="department" class="form-label">Department</label>
-              <input id="department" name="department" type="text" class="form-control" value="{{ user.department }}" required>
+              <select id="department" name="department" class="form-control" required>
+                <option value="Artificial Intelligence and Data Science" {{ 'selected' if user.department == 'Artificial Intelligence and Data Science' else '' }}>Artificial Intelligence and Data Science</option>
+                <option value="Computer Science Engineering" {{ 'selected' if user.department == 'Computer Science Engineering' else '' }}>Computer Science Engineering</option>
+                <option value="Mechanical Engineering" {{ 'selected' if user.department == 'Mechanical Engineering' else '' }}>Mechanical Engineering</option>
+                <option value="Electronics and Communication Engineering" {{ 'selected' if user.department == 'Electronics and Communication Engineering' else '' }}>Electronics and Communication Engineering</option>
+                <option value="Information Technology" {{ 'selected' if user.department == 'Information Technology' else '' }}>Information Technology</option>
+                <option value="Artificial Intelligence and Machine Learning" {{ 'selected' if user.department == 'Artificial Intelligence and Machine Learning' else '' }}>Artificial Intelligence and Machine Learning</option>
+              </select>
             </div>
             <div class="text-end">
               <button type="submit" class="btn btn-game-primary"><i class="fas fa-save me-2"></i>Save Changes</button>
